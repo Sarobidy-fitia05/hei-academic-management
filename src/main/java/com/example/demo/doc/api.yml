@@ -1,0 +1,331 @@
+openapi: 3.0.3
+info:
+  title: HEI Academic Management API
+  description: API de gestion académique et diplomation (HEI)
+  version: 1.0.0
+
+servers:
+  - url: /
+    description: Serveur par défaut
+
+tags:
+  - name: Auth
+    description: Authentification et gestion des sessions
+  - name: Transcripts
+    description: Relevés de notes (génération PDF, statut, téléchargement)
+  - name: Graduates
+    description: Liste et export des diplômés
+
+paths:
+  /auth/register:
+    post:
+      tags: [Auth]
+      summary: Inscrire un nouvel utilisateur
+      operationId: register
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RegisterRequest'
+      responses:
+        '200':
+          description: Utilisateur créé, token renvoyé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '409':
+          description: Email déjà utilisé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Connecter un utilisateur
+      operationId: login
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Connexion réussie, token renvoyé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthResponse'
+        '401':
+          description: Identifiants invalides
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+
+  /api/student/transcripts/generate:
+    post:
+      tags: [Transcripts]
+      summary: Générer et uploader le relevé PDF d'un étudiant
+      operationId: generateTranscript
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnnualResultDTO'
+      responses:
+        '200':
+          description: Relevé généré
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranscriptStatusResponse'
+        '403':
+          description: Accès refusé
+
+  /api/student/transcripts/{studentId}:
+    get:
+      tags: [Transcripts]
+      summary: Récupérer le statut du relevé le plus récent d'un étudiant
+      operationId: getTranscriptStatus
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Statut du relevé
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranscriptStatusResponse'
+        '403':
+          description: Accès refusé
+        '404':
+          description: Étudiant ou relevé introuvable
+
+  /api/student/transcripts/{studentId}/download:
+    get:
+      tags: [Transcripts]
+      summary: Télécharger le relevé PDF d'un étudiant
+      operationId: downloadTranscript
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: studentId
+          in: path
+          required: true
+          schema:
+            type: integer
+            format: int64
+      responses:
+        '200':
+          description: Fichier PDF du relevé
+          content:
+            application/pdf:
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: Accès refusé
+        '404':
+          description: Relevé introuvable
+
+  /api/admin/graduates:
+    get:
+      tags: [Graduates]
+      summary: Liste des diplômés (classement inclus)
+      operationId: listGraduates
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: promotionId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: parcours
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Parcours'
+      responses:
+        '200':
+          description: Liste des diplômés triée par classement
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GraduateDTO'
+        '403':
+          description: Accès refusé (réservé ADMIN)
+
+  /api/admin/graduates/export:
+    get:
+      tags: [Graduates]
+      summary: Télécharger la liste des diplômés au format XLSX
+      operationId: exportGraduatesXlsx
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: promotionId
+          in: query
+          required: false
+          schema:
+            type: integer
+            format: int64
+        - name: parcours
+          in: query
+          required: false
+          schema:
+            $ref: '#/components/schemas/Parcours'
+      responses:
+        '200':
+          description: Fichier XLSX des diplômés
+          content:
+            application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
+              schema:
+                type: string
+                format: binary
+        '403':
+          description: Accès refusé (réservé ADMIN)
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+    Role:
+      type: string
+      enum: [STUDENT, TEACHER, ADMIN]
+
+    Parcours:
+      type: string
+      enum: [EL, TN]
+
+    RegisterRequest:
+      type: object
+      required: [firstName, lastName, email, password, role]
+      properties:
+        firstName:
+          type: string
+        lastName:
+          type: string
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 8
+        role:
+          $ref: '#/components/schemas/Role'
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    AuthResponse:
+      type: object
+      properties:
+        token:
+          type: string
+
+    GradeDTO:
+      type: object
+      properties:
+        courseReference:
+          type: string
+        courseTitle:
+          type: string
+        credits:
+          type: integer
+        grade:
+          type: number
+          format: double
+
+    AnnualResultDTO:
+      type: object
+      required: [studentId, academicYear]
+      properties:
+        studentId:
+          type: integer
+          format: int64
+        studentFirstName:
+          type: string
+        studentLastName:
+          type: string
+        academicYear:
+          type: integer
+        grades:
+          type: array
+          items:
+            $ref: '#/components/schemas/GradeDTO'
+        annualAverage:
+          type: number
+          format: double
+        totalCredits:
+          type: integer
+
+    TranscriptStatusResponse:
+      type: object
+      properties:
+        studentId:
+          type: integer
+          format: int64
+        status:
+          type: string
+          enum: [COMPLETE, INCOMPLETE]
+        generatedAt:
+          type: string
+          format: date-time
+          nullable: true
+
+    GraduateDTO:
+      type: object
+      properties:
+        studentId:
+          type: integer
+          format: int64
+        firstName:
+          type: string
+        lastName:
+          type: string
+        parcours:
+          $ref: '#/components/schemas/Parcours'
+        generalAverage:
+          type: number
+          format: double
+        ranking:
+          type: integer
+
+    ErrorResponse:
+      type: object
+      properties:
+        message:
+          type: string
+        status:
+          type: integer
