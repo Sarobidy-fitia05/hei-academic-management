@@ -162,4 +162,6 @@ dependencies {
 
     testImplementation 'org.springframework.security:spring-security-test:6.2.1'
 
+    implementation 'org.apache.pdfbox:pdfbox:2.0.31'
+
 }
