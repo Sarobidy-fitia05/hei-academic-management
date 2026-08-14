@@ -17,8 +17,15 @@ public class CustomUserDetailsService implements UserDetailsService {
 
   @Override
   public UserDetails loadUserByUsername(String email) throws UsernameNotFoundException {
+
+    System.out.println(">>> RECHERCHE USER : " + email);
+
     return userRepository
         .findByEmail(email)
-        .orElseThrow(() -> new UsernameNotFoundException("Utilisateur introuvable: " + email));
+        .orElseThrow(
+            () -> {
+              System.out.println(">>> USER INTROUVABLE : " + email);
+              return new UsernameNotFoundException("Utilisateur introuvable: " + email);
+            });
   }
 }

@@ -8,6 +8,7 @@ import com.example.demo.jwt.JwtService;
 import com.example.demo.user.Role;
 import com.example.demo.user.User;
 import com.example.demo.user.UserRepository;
+import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -19,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
 @ActiveProfiles("test")
 class SecurityAuthorizationIntegrationTest {
 
