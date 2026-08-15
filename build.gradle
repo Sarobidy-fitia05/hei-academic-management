@@ -5,29 +5,24 @@ plugins {
     id 'java'
     id 'org.springframework.boot' version '3.2.2'
     id 'io.spring.dependency-management' version '1.1.3'
-
     id 'org.openapi.generator' version '7.7.0'
-
     id 'jacoco'
+}
 
-    
+group = 'com.example.demo'
+version = '0.0.1-SNAPSHOT'
+
+java {
+    sourceCompatibility = '21'
+    targetCompatibility = '21'
+}
+
+repositories {
+    mavenCentral()
 }
 
 jacoco {
     toolVersion = "0.8.11"
-}
-
-
-
-repositories {
-
-    mavenCentral()
-}
-
-java {
-    group = 'com.example.demo'
-    sourceCompatibility = '21'
-    targetCompatibility = '21'
 }
 
 configurations {
@@ -36,17 +31,105 @@ configurations {
     }
 }
 
+dependencies {
 
+    // ============================================
+    // SPRING BOOT
+    // ============================================
 
+    implementation 'org.springframework.boot:spring-boot-starter-web'
+    implementation 'org.springframework.boot:spring-boot-starter-data-jpa'
+    implementation 'org.springframework.boot:spring-boot-starter-validation'
+
+    // ============================================
+    // DATABASE
+    // ============================================
+
+    runtimeOnly 'org.postgresql:postgresql:42.7.2'
+
+    // ============================================
+    // JACKSON
+    // ============================================
+
+    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.3'
+    implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
+
+    // ============================================
+    // AWS / SERVERLESS
+    // ============================================
+
+    implementation 'com.amazonaws.serverless:aws-serverless-java-container-springboot3:2.1.0'
+    implementation 'com.amazonaws:aws-lambda-java-core:1.2.3'
+    implementation 'com.amazonaws:aws-lambda-java-events:3.11.3'
+
+    implementation 'software.amazon.awssdk:aws-query-protocol:2.20.26'
+    implementation 'software.amazon.awssdk:sqs:2.21.40'
+    implementation 'software.amazon.awssdk:eventbridge:2.21.40'
+    implementation 'software.amazon.awssdk:ses:2.21.40'
+    implementation 'software.amazon.awssdk:core:2.21.40'
+    implementation 'software.amazon.awssdk.crt:aws-crt:0.28.12'
+
+    // ============================================
+    // MAIL
+    // ============================================
+
+    implementation 'jakarta.mail:jakarta.mail-api:2.1.2'
+    implementation 'jakarta.activation:jakarta.activation-api:2.1.2'
+    implementation 'com.sun.mail:jakarta.mail:2.0.1'
+    implementation 'com.sun.activation:jakarta.activation:2.0.1'
+
+    // ============================================
+    // OTHER
+    // ============================================
+
+    implementation 'org.apache.tika:tika-core:2.9.1'
+    implementation 'org.reflections:reflections:0.10.2'
+    implementation 'io.swagger:swagger-annotations:1.6.12'
+
+    // ============================================
+    // LOMBOK
+    // ============================================
+
+    compileOnly 'org.projectlombok:lombok:1.18.30'
+    annotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    testCompileOnly 'org.projectlombok:lombok:1.18.30'
+    testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
+
+    // ============================================
+    // SPRING BOOT TEST
+    // ============================================
+
+    testImplementation 'org.springframework.boot:spring-boot-starter-test'
+
+    // ============================================
+    // TESTCONTAINERS
+    // ============================================
+
+    testImplementation 'org.testcontainers:testcontainers:1.20.4'
+    testImplementation 'org.testcontainers:postgresql:1.20.4'
+    testImplementation 'org.testcontainers:junit-jupiter:1.20.4'
+
+    // ============================================
+    // OTHER TESTS
+    // ============================================
+
+    testImplementation 'org.junit-pioneer:junit-pioneer:2.2.0'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+}
 
 test {
-    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
     useJUnitPlatform()
+
+    // Important for computers with limited RAM
+    maxParallelForks = 1
+
     finalizedBy jacocoTestCoverageVerification
 }
 
 jacocoTestCoverageVerification {
     dependsOn test
+
     afterEvaluate {
         classDirectories.setFrom(files(classDirectories.files.collect {
             fileTree(dir: it, exclude: [
@@ -54,6 +137,7 @@ jacocoTestCoverageVerification {
             ])
         }))
     }
+
     violationRules {
         rule {
             limit {
@@ -62,6 +146,7 @@ jacocoTestCoverageVerification {
             }
         }
     }
+
     finalizedBy jacocoTestReport
 }
 
@@ -70,107 +155,68 @@ jacocoTestReport {
         xml.required = true
         html.required = true
     }
+
     afterEvaluate {
-        // Need to be duplicated like this from jacocoTestCoverageVerification,
-        // else display coverageRate is inconsistent with what was computed during coverage...
         classDirectories.setFrom(files(classDirectories.files.collect {
             fileTree(dir: it, exclude: [
                     "**/gen/**"
             ])
         }))
     }
+
     doLast {
-        def coverageReportFile = file("$rootDir/build/reports/jacoco/test/jacocoTestReport.xml")
+        def coverageReportFile =
+                file("$rootDir/build/reports/jacoco/test/jacocoTestReport.xml")
 
         if (coverageReportFile.exists()) {
+
             def xmlParser = new XmlParser()
-            xmlParser.setFeature("http://apache.org/xml/features/nonvalidating/load-external-dtd", false)
-            xmlParser.setFeature("http://apache.org/xml/features/disallow-doctype-decl", false)
+
+            xmlParser.setFeature(
+                    "http://apache.org/xml/features/nonvalidating/load-external-dtd",
+                    false
+            )
+
+            xmlParser.setFeature(
+                    "http://apache.org/xml/features/disallow-doctype-decl",
+                    false
+            )
 
             def xml = xmlParser.parse(coverageReportFile)
 
-            def lineCounter = xml.'counter'.find { it.@type == 'LINE' }
+            def lineCounter =
+                    xml.'counter'.find { it.@type == 'LINE' }
+
             if (lineCounter != null) {
-                def totalLines = lineCounter.@missed?.toInteger() + lineCounter.@covered?.toInteger() ?: 0
-                def coveredLines = lineCounter.@covered?.toInteger() ?: 0
+
+                def totalLines =
+                        (lineCounter.@missed?.toInteger() ?: 0) +
+                                (lineCounter.@covered?.toInteger() ?: 0)
+
+                def coveredLines =
+                        lineCounter.@covered?.toInteger() ?: 0
+
                 if (totalLines > 0) {
-                    def coverageRate = coveredLines / totalLines.toDouble() * 100
+
+                    def coverageRate =
+                            coveredLines / totalLines.toDouble() * 100
+
                     println "Total Line Coverage Rate: ${coverageRate.round(2)}%"
+
                 } else {
+
                     println "No lines were covered or missed in the report."
                 }
+
             } else {
+
                 println "No LINE coverage counter found in the JaCoCo report."
             }
+
         } else {
-            println "No JaCoCo coverage report found. Make sure you run 'gradle test jacocoTestReport' first."
+
+            println "No JaCoCo coverage report found. " +
+                    "Make sure you run './gradlew test jacocoTestReport' first."
         }
     }
-}
-
-dependencies {
-    implementation 'org.springframework.boot:spring-boot-starter-web:3.2.2'
-    testImplementation 'org.testcontainers:testcontainers:2.0.2'
-
-    implementation 'com.fasterxml.jackson.datatype:jackson-datatype-jsr310:2.15.3'
-
-    implementation 'com.amazonaws.serverless:aws-serverless-java-container-springboot3:2.1.0'
-    implementation 'software.amazon.awssdk:aws-query-protocol:2.20.26'
-
-    implementation 'com.amazonaws:aws-lambda-java-core:1.2.3'
-    implementation 'com.amazonaws:aws-lambda-java-events:3.11.3'
-    implementation 'software.amazon.awssdk:sqs:2.21.40'
-    implementation 'software.amazon.awssdk:eventbridge:2.21.40'
-    implementation 'software.amazon.awssdk.crt:aws-crt:0.28.12'
-    implementation 'software.amazon.awssdk:ses:2.21.40'
-    implementation 'software.amazon.awssdk:core:2.21.40'
-
-    implementation 'jakarta.mail:jakarta.mail-api:2.1.2'
-    implementation 'jakarta.activation:jakarta.activation-api:2.1.2'
-    implementation 'com.sun.mail:jakarta.mail:2.0.1'
-    implementation 'com.sun.activation:jakarta.activation:2.0.1'
-
-    implementation 'org.apache.tika:tika-core:2.9.1'
-
-    implementation 'org.reflections:reflections:0.10.2'
-
-    compileOnly 'org.projectlombok:lombok:1.18.30'
-    annotationProcessor 'org.projectlombok:lombok:1.18.30'
-    testCompileOnly 'org.projectlombok:lombok:1.18.30'
-    testAnnotationProcessor 'org.projectlombok:lombok:1.18.30'
-
-    implementation 'org.openapitools:jackson-databind-nullable:0.2.6'
-    implementation 'io.swagger:swagger-annotations:1.6.12'
-
-    testImplementation 'org.springframework.boot:spring-boot-starter-test:3.2.2'
-    testImplementation 'org.testcontainers:testcontainers-junit-jupiter:2.0.2'
-    testImplementation 'org.junit-pioneer:junit-pioneer:2.2.0'
-
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:3.2.2'
-    runtimeOnly 'org.postgresql:postgresql:42.7.2'
-    implementation 'org.springframework.boot:spring-boot-starter-validation:3.2.2'
-
-    runtimeOnly 'org.postgresql:postgresql'
-
-    // ============================================
-    // TESTS - SPRING BOOT
-    // ============================================
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    // ============================================
-    // TESTS - TESTCONTAINERS (CORRECTION)
-    // ============================================
-
-    testImplementation 'org.testcontainers:postgresql:2.0.2'
-    testImplementation 'org.testcontainers:junit-jupiter:2.0.2'
-    testImplementation 'org.testcontainers:testcontainers:1.20.4'
-    testImplementation 'org.testcontainers:postgresql:1.20.4'
-    testImplementation 'org.testcontainers:junit-jupiter:1.20.4'
-
-    // Autres dépendances de test
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-
 }
