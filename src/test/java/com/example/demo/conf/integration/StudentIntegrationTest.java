@@ -15,15 +15,6 @@ import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 
-/**
- * Test d'intégration bout-en-bout du flux Student : service -> repository -> base Postgres réelle
- * (Testcontainers).
- *
- * <p>NOTE : ce test passe par {@link StudentService} et non par un appel REST, car aucun
- * StudentController n'existe encore dans le projet (seuls des controllers "health" sont présents
- * sous endpoint/rest/controller). Dès qu'un StudentController sera ajouté, ce test pourra être
- * complété avec des appels TestRestTemplate sur /api/students.
- */
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @Testcontainers
 @ActiveProfiles("test")
