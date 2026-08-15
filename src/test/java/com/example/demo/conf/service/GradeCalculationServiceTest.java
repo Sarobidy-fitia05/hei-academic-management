@@ -3,7 +3,11 @@ package com.example.demo.conf.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.demo.entity.*;
+import com.example.demo.repository.AcademicYearRepository;
+import com.example.demo.repository.PromotionRepository;
+import com.example.demo.repository.SemesterRepository;
 import com.example.demo.service.*;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -45,9 +49,16 @@ public class GradeCalculationServiceTest {
 
   @Autowired private CourseAttemptService courseAttemptService;
 
+  @Autowired private PromotionRepository promotionRepository;
+
+  @Autowired private AcademicYearRepository academicYearRepository;
+
+  @Autowired private SemesterRepository semesterRepository;
+
   private Student student;
   private Course course;
   private Exam exam;
+  private Semester semester;
 
   @BeforeEach
   void setUp() {
@@ -64,8 +75,29 @@ public class GradeCalculationServiceTest {
     course.setCredits(5);
     course = courseService.save(course);
 
+    Promotion promotion = new Promotion();
+    promotion.setYear(2024);
+    promotion.setGroupPrefix("M1");
+    promotion = promotionRepository.save(promotion);
+
+    AcademicYear academicYear = new AcademicYear();
+    academicYear.setLabel("2024-2025");
+    academicYear.setStartDate(LocalDate.of(2024, 9, 1));
+    academicYear.setEndDate(LocalDate.of(2025, 6, 30));
+    academicYear.setPromotion(promotion);
+    academicYear = academicYearRepository.save(academicYear);
+
+    semester = new Semester();
+    semester.setCode("S1");
+    semester.setSemesterNumber(1);
+    semester.setStartDate(LocalDate.of(2024, 9, 1));
+    semester.setEndDate(LocalDate.of(2025, 1, 31));
+    semester.setAcademicYear(academicYear);
+    semester = semesterRepository.save(semester);
+
     ExamSession session = new ExamSession();
     session.setType(ExamSessionType.NORMAL);
+    session.setSemester(semester);
     session = examService.createExamSession(session);
 
     exam = new Exam();
@@ -93,8 +125,7 @@ public class GradeCalculationServiceTest {
     gradeService.saveGrade(grade2);
 
     Double average =
-        gradeCalculationService.calculateSemesterAverage(
-            student.getId(), exam.getExamSession().getSemester().getId());
+        gradeCalculationService.calculateSemesterAverage(student.getId(), semester.getId());
 
     assertThat(average).isNotNull();
     assertThat(average).isBetween(12.0, 15.0);
