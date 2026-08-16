@@ -69,7 +69,7 @@ public class TranscriptService {
     return toResponse(transcript);
   }
 
-  public byte[] downloadPdf(Long studentId) {
+  public File downloadPdf(Long studentId) {
     Transcript transcript =
         transcriptRepository
             .findTopByStudentIdOrderByAcademicYearDesc(studentId)
