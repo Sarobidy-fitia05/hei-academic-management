@@ -169,4 +169,7 @@ dependencies {
     implementation 'org.apache.poi:poi-ooxml:5.2.5'
     implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.2.2'
 
+    implementation 'software.amazon.awssdk:s3:2.21.40'
+    implementation 'software.amazon.awssdk:s3-transfer-manager:2.21.40'
+
 }
