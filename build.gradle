@@ -40,7 +40,7 @@ configurations {
 
 
 test {
-    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+    maxParallelForks = 1
     useJUnitPlatform()
     finalizedBy jacocoTestCoverageVerification
 }
@@ -172,4 +172,5 @@ dependencies {
     implementation 'software.amazon.awssdk:s3:2.21.40'
     implementation 'software.amazon.awssdk:s3-transfer-manager:2.21.40'
 
+    implementation 'org.apache.poi:poi-ooxml:5.2.5'
 }
