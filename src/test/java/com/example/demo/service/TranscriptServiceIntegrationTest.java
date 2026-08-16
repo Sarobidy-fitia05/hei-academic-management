@@ -12,6 +12,7 @@ import com.example.demo.endpoint.rest.dto.GradeDTO;
 import com.example.demo.file.bucket.BucketComponent;
 import com.example.demo.transcript.TranscriptRepository;
 import java.io.File;
+import java.nio.file.Files;
 import java.util.List;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -75,11 +76,12 @@ class TranscriptServiceIntegrationTest {
             4);
     transcriptService.generate(data);
 
-    byte[] fakePdf = "%PDF-fake".getBytes();
-    when(bucketComponent.download("transcripts/20-2026.pdf")).thenReturn(fakePdf);
+    File fakePdfFile = File.createTempFile("fake-transcript-", ".pdf");
+    Files.write(fakePdfFile.toPath(), "%PDF-fake".getBytes());
+    when(bucketComponent.download("transcripts/20-2026.pdf")).thenReturn(fakePdfFile);
 
-    byte[] result = transcriptService.downloadPdf(20L);
+    File result = transcriptService.downloadPdf(20L);
 
-    assertThat(result).isEqualTo(fakePdf);
+    assertThat(result).isEqualTo(fakePdfFile);
   }
 }
