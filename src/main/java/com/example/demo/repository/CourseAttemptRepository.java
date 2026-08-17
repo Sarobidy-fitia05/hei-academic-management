@@ -27,4 +27,6 @@ public interface CourseAttemptRepository extends JpaRepository<CourseAttempt, UU
 
   List<CourseAttempt> findByStudentIdAndCourseIdOrderByAttemptNumberDesc(
       UUID studentId, UUID courseId);
+
+  List<CourseAttempt> findByExamSessionSemesterId(UUID semesterId);
 }

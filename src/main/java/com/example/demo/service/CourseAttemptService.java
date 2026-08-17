@@ -1,7 +1,11 @@
 package com.example.demo.service;
 
+import com.example.demo.entity.Course;
 import com.example.demo.entity.CourseAttempt;
 import com.example.demo.entity.CourseAttemptStatus;
+import com.example.demo.entity.ExamSession;
+import com.example.demo.entity.Group;
+import com.example.demo.entity.Student;
 import com.example.demo.repository.CourseAttemptRepository;
 import java.util.List;
 import java.util.UUID;
@@ -18,6 +22,31 @@ public class CourseAttemptService {
 
   public CourseAttempt save(CourseAttempt courseAttempt) {
     return courseAttemptRepository.save(courseAttempt);
+  }
+
+  @Transactional
+  public CourseAttempt createNextAttempt(
+      Student student, Course course, ExamSession examSession, Group group) {
+    List<CourseAttempt> existingAttempts =
+        courseAttemptRepository.findByStudentIdAndCourseId(student.getId(), course.getId());
+
+    int nextAttemptNumber =
+        existingAttempts.stream()
+                .map(CourseAttempt::getAttemptNumber)
+                .filter(java.util.Objects::nonNull)
+                .mapToInt(Integer::intValue)
+                .max()
+                .orElse(0)
+            + 1;
+
+    CourseAttempt attempt = new CourseAttempt();
+    attempt.setStudent(student);
+    attempt.setCourse(course);
+    attempt.setExamSession(examSession);
+    attempt.setGroup(group);
+    attempt.setAttemptNumber(nextAttemptNumber);
+
+    return courseAttemptRepository.save(attempt);
   }
 
   public CourseAttempt findById(UUID id) {
@@ -57,7 +86,7 @@ public class CourseAttemptService {
   }
 
   public List<CourseAttempt> findBySemester(UUID semesterId) {
-    return courseAttemptRepository.findByStudentIdAndExamSessionSemesterId(null, semesterId);
+    return courseAttemptRepository.findByExamSessionSemesterId(semesterId);
   }
 
   public int getAttemptCount(UUID studentId, UUID courseId) {

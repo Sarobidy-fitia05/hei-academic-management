@@ -74,8 +74,7 @@ jacocoTestReport {
         html.required = true
     }
     afterEvaluate {
-        // Need to be duplicated like this from jacocoTestCoverageVerification,
-        // else display coverageRate is inconsistent with what was computed during coverage...
+
         classDirectories.setFrom(files(classDirectories.files.collect {
             fileTree(dir: it, exclude: [
                     "**/gen/**"
@@ -155,15 +154,8 @@ dependencies {
 
     runtimeOnly 'org.postgresql:postgresql'
 
-    // ============================================
-    // TESTS - SPRING BOOT
-    // ============================================
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
-
-    // ============================================
-    // TESTS - TESTCONTAINERS (CORRECTION)
-    // ============================================
 
     testImplementation 'org.testcontainers:postgresql:2.0.2'
     testImplementation 'org.testcontainers:junit-jupiter:2.0.2'
@@ -171,7 +163,7 @@ dependencies {
     testImplementation 'org.testcontainers:postgresql:1.20.4'
     testImplementation 'org.testcontainers:junit-jupiter:1.20.4'
 
-    // Autres dépendances de test
+
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
