@@ -3,26 +3,27 @@
 <head>
     <meta charset="UTF-8" />
     <title>Diplomes</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
 </head>
 <body>
-    <h1>Liste des diplomes</h1>
+<h1>Liste des diplomes</h1>
 
-    <form th:action="@{/graduates/export}" method="get">
-        <label for="promotionId">Promotion</label>
-        <select id="promotionId" name="promotionId">
-            <option th:each="promotion : ${promotions}"
-                    th:value="${promotion.id}"
-                    th:text="${promotion.name}"></option>
-        </select>
+<form th:action="@{/graduates/export}" method="get">
+    <label for="promotionId">Promotion</label>
+    <select id="promotionId" name="promotionId">
+        <option th:each="promotion : ${promotions}"
+                th:value="${promotion.id}"
+                th:text="${promotion.name}"></option>
+    </select>
 
-        <label for="parcours">Parcours</label>
-        <select id="parcours" name="parcours">
-            <option th:each="p : ${parcoursOptions}" th:value="${p}" th:text="${p}"></option>
-        </select>
+    <label for="parcours">Parcours</label>
+    <select id="parcours" name="parcours">
+        <option th:each="p : ${parcoursOptions}" th:value="${p}" th:text="${p}"></option>
+    </select>
 
-        <button type="submit">Telecharger la liste des diplomes</button>
-    </form>
+    <button type="submit">Telecharger la liste des diplomes</button>
+</form>
 
-    <a th:href="@{/promotions}">Retour aux promotions</a>
+<a th:href="@{/promotions}">Retour aux promotions</a>
 </body>
 </html>

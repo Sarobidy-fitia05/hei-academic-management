@@ -45,8 +45,8 @@ public class SecurityConfig {
                     .permitAll()
                     .anyRequest()
                     .hasRole("ADMIN"))
-        .formLogin(form -> form.permitAll())
-        .authenticationProvider(authenticationProvider());
+            .formLogin(form -> form.defaultSuccessUrl("/promotions", true).permitAll())
+            .authenticationProvider(authenticationProvider());
 
     return http.build();
   }
