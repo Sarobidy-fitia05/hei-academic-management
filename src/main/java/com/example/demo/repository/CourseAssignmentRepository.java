@@ -23,4 +23,7 @@ public interface CourseAssignmentRepository extends JpaRepository<CourseAssignme
   List<CourseAssignment> findByTeacherIdAndSemesterId(UUID teacherId, UUID semesterId);
 
   List<CourseAssignment> findByGroupIdAndSemesterId(UUID groupId, UUID semesterId);
+
+  boolean existsByTeacherIdAndCourseIdAndGroupIdAndSemesterId(
+      UUID teacherId, UUID courseId, UUID groupId, UUID semesterId);
 }

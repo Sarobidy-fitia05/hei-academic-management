@@ -13,6 +13,8 @@ public interface StudentGroupHistoryRepository extends JpaRepository<StudentGrou
 
   List<StudentGroupHistory> findByStudentIdAndSemesterId(UUID studentId, UUID semesterId);
 
+  List<StudentGroupHistory> findByStudentIdOrderBySemester_SemesterNumberAsc(UUID studentId);
+
   List<StudentGroupHistory> findByGroupId(UUID groupId);
 
   Optional<StudentGroupHistory> findByStudentIdAndSemesterIdAndGroupId(

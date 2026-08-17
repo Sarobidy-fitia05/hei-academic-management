@@ -19,4 +19,6 @@ public interface GroupCourseRepository extends JpaRepository<GroupCourse, UUID> 
       UUID groupId, UUID courseId, UUID semesterId);
 
   List<GroupCourse> findByGroupIdAndSemesterId(UUID groupId, UUID semesterId);
+
+  boolean existsByGroupIdAndCourseIdAndSemesterId(UUID groupId, UUID courseId, UUID semesterId);
 }

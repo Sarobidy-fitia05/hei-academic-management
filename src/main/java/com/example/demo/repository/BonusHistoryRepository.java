@@ -13,4 +13,6 @@ public interface BonusHistoryRepository extends JpaRepository<BonusHistory, UUID
   List<BonusHistory> findByChangedById(UUID changedById);
 
   List<BonusHistory> findByBonusId(UUID bonusId);
+
+  List<BonusHistory> findByBonusIdOrderByChangedAtAsc(UUID bonusId);
 }
