@@ -15,18 +15,17 @@ import org.springframework.transaction.annotation.Transactional;
 @Transactional
 public class GradeCalculationService {
 
+  private static final double MAX_GRADE = 20.0;
+  private static final double PASSING_GRADE = 10.0;
+
   private final GradeService gradeService;
   private final CourseAttemptService courseAttemptService;
   private final CourseService courseService;
+  private final BonusService bonusService;
 
-  /**
-   * Calculate the final grade for a course attempt Combines all grades for this course attempt with
-   * their coefficients
-   */
   public Double calculateCourseFinalGrade(UUID studentId, UUID examSessionId) {
     List<Grade> grades = gradeService.findByStudentId(studentId);
 
-    // Filter grades for this exam session
     double weightedSum = 0.0;
     double totalCoefficients = 0.0;
 
@@ -46,19 +45,22 @@ public class GradeCalculationService {
     return totalCoefficients > 0 ? weightedSum / totalCoefficients : null;
   }
 
-  /** Calculate and update the final grade for a course attempt */
   public CourseAttempt calculateAndUpdateFinalGrade(UUID courseAttemptId) {
     CourseAttempt attempt = courseAttemptService.findById(courseAttemptId);
 
-    Double finalGrade =
+    Double weightedAverage =
         calculateCourseFinalGrade(attempt.getStudent().getId(), attempt.getExamSession().getId());
 
-    if (finalGrade != null) {
+    if (weightedAverage != null) {
+      Double totalBonus = bonusService.getTotalBonusForAttempt(courseAttemptId);
+      if (totalBonus == null) totalBonus = 0.0;
+
+      double finalGrade = weightedAverage + totalBonus;
+      finalGrade = Math.min(finalGrade, MAX_GRADE);
+
       attempt.setFinalGrade(finalGrade);
 
-      // Determine status based on final grade
-      // Assuming passing grade is 10/20
-      if (finalGrade >= 10.0) {
+      if (finalGrade >= PASSING_GRADE) {
         attempt.setStatus(CourseAttemptStatus.PASSED);
       } else {
         attempt.setStatus(CourseAttemptStatus.FAILED);
@@ -70,7 +72,6 @@ public class GradeCalculationService {
     return attempt;
   }
 
-  /** Calculate semester average for a student */
   public Double calculateSemesterAverage(UUID studentId, UUID semesterId) {
     List<Grade> grades = gradeService.findByStudentAndSemester(studentId, semesterId);
 
@@ -94,7 +95,6 @@ public class GradeCalculationService {
     return totalCoefficients > 0 ? weightedSum / totalCoefficients : 0.0;
   }
 
-  /** Calculate total credits earned by a student */
   public Integer calculateTotalCredits(UUID studentId) {
     List<CourseAttempt> attempts =
         courseAttemptService.findByStudentIdAndStatus(studentId, CourseAttemptStatus.PASSED);
@@ -110,7 +110,6 @@ public class GradeCalculationService {
     return totalCredits;
   }
 
-  /** Calculate general average across all semesters */
   public Double calculateGeneralAverage(UUID studentId) {
     List<Grade> allGrades = gradeService.findByStudentId(studentId);
 
@@ -134,7 +133,6 @@ public class GradeCalculationService {
     return totalCoefficients > 0 ? weightedSum / totalCoefficients : 0.0;
   }
 
-  /** Check if a student has passed a course (successful attempt) */
   public boolean hasPassedCourse(UUID studentId, UUID courseId) {
     List<CourseAttempt> attempts =
         courseAttemptService.findByStudentIdAndCourseId(studentId, courseId);
@@ -148,7 +146,6 @@ public class GradeCalculationService {
     return false;
   }
 
-  /** Get the best grade for a course */
   public Double getBestCourseGrade(UUID studentId, UUID courseId) {
     List<CourseAttempt> attempts =
         courseAttemptService.findByStudentIdAndCourseId(studentId, courseId);

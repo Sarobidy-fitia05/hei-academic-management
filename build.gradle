@@ -10,7 +10,7 @@ plugins {
 
     id 'jacoco'
 
-    
+
 }
 
 jacoco {
@@ -40,7 +40,10 @@ configurations {
 
 
 test {
-    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
+    maxParallelForks = 1
+    minHeapSize = "128m"
+    maxHeapSize = "256m"
+    jvmArgs '-XX:+UseSerialGC', '-XX:MaxMetaspaceSize=128m'
     useJUnitPlatform()
     finalizedBy jacocoTestCoverageVerification
 }
