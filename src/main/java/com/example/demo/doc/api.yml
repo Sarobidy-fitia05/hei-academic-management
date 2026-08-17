@@ -67,10 +67,34 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+
+  /api/student/transcripts/generate:
+    post:
+      tags: [Transcripts]
+      summary: Générer et uploader le relevé PDF d'un étudiant
+      operationId: generateTranscript
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnnualResultDTO'
+      responses:
+        '200':
+          description: Relevé généré
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranscriptStatusResponse'
+        '403':
+          description: Accès refusé
+
   /api/student/transcripts/{studentId}:
     get:
       tags: [Transcripts]
-      summary: Récupérer le statut du relevé d'un étudiant
+      summary: Récupérer le statut du relevé le plus récent d'un étudiant
       operationId: getTranscriptStatus
       security:
         - bearerAuth: []
@@ -115,28 +139,6 @@ paths:
               schema:
                 type: string
                 format: binary
-        '403':
-          description: Accès refusé
-        '404':
-          description: Relevé introuvable
-
-  /api/student/transcripts/{studentId}/send:
-    post:
-      tags: [Transcripts]
-      summary: Envoyer le relevé par email (asynchrone)
-      operationId: sendTranscriptByEmail
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: studentId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '202':
-          description: Envoi accepté, traité de façon asynchrone
         '403':
           description: Accès refusé
         '404':
@@ -251,6 +253,42 @@ components:
       properties:
         token:
           type: string
+
+    GradeDTO:
+      type: object
+      properties:
+        courseReference:
+          type: string
+        courseTitle:
+          type: string
+        credits:
+          type: integer
+        grade:
+          type: number
+          format: double
+
+    AnnualResultDTO:
+      type: object
+      required: [studentId, academicYear]
+      properties:
+        studentId:
+          type: integer
+          format: int64
+        studentFirstName:
+          type: string
+        studentLastName:
+          type: string
+        academicYear:
+          type: integer
+        grades:
+          type: array
+          items:
+            $ref: '#/components/schemas/GradeDTO'
+        annualAverage:
+          type: number
+          format: double
+        totalCredits:
+          type: integer
 
     TranscriptStatusResponse:
       type: object
