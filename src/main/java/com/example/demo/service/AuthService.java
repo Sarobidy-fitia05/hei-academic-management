@@ -22,10 +22,10 @@ public class AuthService {
   private final AuthenticationManager authenticationManager;
 
   public AuthService(
-          UserAccountRepository userAccountRepository,
-          PasswordEncoder passwordEncoder,
-          JwtService jwtService,
-          AuthenticationManager authenticationManager) {
+      UserAccountRepository userAccountRepository,
+      PasswordEncoder passwordEncoder,
+      JwtService jwtService,
+      AuthenticationManager authenticationManager) {
     this.userAccountRepository = userAccountRepository;
     this.passwordEncoder = passwordEncoder;
     this.jwtService = jwtService;
@@ -50,10 +50,14 @@ public class AuthService {
 
   public AuthResponse login(LoginRequest request) {
     authenticationManager.authenticate(
-            new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
+        new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
 
-    UserAccount userAccount = userAccountRepository.findByUsername(request.getUsername())
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Identifiants invalides"));
+    UserAccount userAccount =
+        userAccountRepository
+            .findByUsername(request.getUsername())
+            .orElseThrow(
+                () ->
+                    new ResponseStatusException(HttpStatus.UNAUTHORIZED, "Identifiants invalides"));
 
     return new AuthResponse(jwtService.generateToken(userAccount));
   }
