@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8" />
+    <title>Promotions</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+<h1>Liste des promotions</h1>
+<table>
+    <thead>
+    <tr>
+        <th>Annee</th>
+        <th>Nom</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="promotion : ${promotions}">
+        <td th:text="${promotion.year}"></td>
+        <td th:text="${promotion.name}"></td>
+    </tr>
+    </tbody>
+</table>
+<a th:href="@{/graduates}">Voir les diplomes</a>
+</body>
+</html>
