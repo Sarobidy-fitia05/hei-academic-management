@@ -4,6 +4,9 @@ import com.example.demo.endpoint.rest.dto.AnnualResultDTO;
 import com.example.demo.endpoint.rest.dto.TranscriptStatusResponse;
 import com.example.demo.service.TranscriptService;
 import java.io.IOException;
+import java.nio.file.Files;
+import java.util.UUID;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -29,7 +32,13 @@ public class TranscriptController {
   }
 
   @GetMapping("/{studentId}")
-  public ResponseEntity<TranscriptStatusResponse> getStatus(@PathVariable Long studentId) {
+  public ResponseEntity<TranscriptStatusResponse> getStatus(@PathVariable UUID studentId) {
     return ResponseEntity.ok(transcriptService.getStatus(studentId));
+  }
+
+  @GetMapping(value = "/{studentId}/download", produces = MediaType.APPLICATION_PDF_VALUE)
+  public ResponseEntity<byte[]> download(@PathVariable UUID studentId) throws IOException {
+    byte[] pdf = Files.readAllBytes(transcriptService.downloadPdf(studentId).toPath());
+    return ResponseEntity.ok().contentType(MediaType.APPLICATION_PDF).body(pdf);
   }
 }

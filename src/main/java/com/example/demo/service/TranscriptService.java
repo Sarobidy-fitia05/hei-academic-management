@@ -2,14 +2,17 @@ package com.example.demo.service;
 
 import com.example.demo.endpoint.rest.dto.AnnualResultDTO;
 import com.example.demo.endpoint.rest.dto.TranscriptStatusResponse;
+import com.example.demo.entity.Document;
+import com.example.demo.entity.Transcript;
 import com.example.demo.file.bucket.BucketComponent;
-import com.example.demo.transcript.Transcript;
-import com.example.demo.transcript.TranscriptRepository;
-import com.example.demo.transcript.TranscriptStatus;
+import com.example.demo.repository.DocumentRepository;
+import com.example.demo.repository.TranscriptRepository;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.UUID;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
@@ -18,14 +21,17 @@ import org.springframework.web.server.ResponseStatusException;
 public class TranscriptService {
 
   private final TranscriptRepository transcriptRepository;
+  private final DocumentRepository documentRepository;
   private final TranscriptPdfGenerator pdfGenerator;
   private final BucketComponent bucketComponent;
 
   public TranscriptService(
       TranscriptRepository transcriptRepository,
+      DocumentRepository documentRepository,
       TranscriptPdfGenerator pdfGenerator,
       BucketComponent bucketComponent) {
     this.transcriptRepository = transcriptRepository;
+    this.documentRepository = documentRepository;
     this.pdfGenerator = pdfGenerator;
     this.bucketComponent = bucketComponent;
   }
@@ -33,35 +39,35 @@ public class TranscriptService {
   public TranscriptStatusResponse generate(AnnualResultDTO resultData) throws IOException {
     byte[] pdfBytes = pdfGenerator.generate(resultData);
 
-    String bucketKey =
-        "transcripts/" + resultData.studentId() + "-" + resultData.academicYear() + ".pdf";
+    Transcript transcript = new Transcript();
+    transcript.setType("YEAR");
+    transcript.setStatus("COMPLETE");
+    transcript.setGeneralAverage(resultData.annualAverage());
+    transcript.setTotalCredits(resultData.totalCredits());
+    transcript.setGeneratedAt(LocalDateTime.now());
+    transcriptRepository.save(transcript);
+
+    String bucketKey = "transcripts/" + transcript.getId() + ".pdf";
     File tempFile = File.createTempFile("transcript-", ".pdf");
     try (FileOutputStream fos = new FileOutputStream(tempFile)) {
       fos.write(pdfBytes);
     }
     bucketComponent.upload(tempFile, bucketKey);
 
-    Transcript transcript =
-        transcriptRepository
-            .findByStudentIdAndAcademicYear(resultData.studentId(), resultData.academicYear())
-            .orElse(
-                new Transcript(
-                    resultData.studentId(),
-                    resultData.academicYear(),
-                    TranscriptStatus.COMPLETE,
-                    bucketKey));
-    transcript.setStatus(TranscriptStatus.COMPLETE);
-    transcript.setPdfS3Key(bucketKey);
-    transcript.setGeneratedAt(java.time.LocalDateTime.now());
-    transcriptRepository.save(transcript);
+    Document document = new Document();
+    document.setTranscript(transcript);
+    document.setDocumentType("PDF");
+    document.setS3Key(bucketKey);
+    document.setCreatedAt(LocalDateTime.now());
+    documentRepository.save(document);
 
     return toResponse(transcript);
   }
 
-  public TranscriptStatusResponse getStatus(Long studentId) {
+  public TranscriptStatusResponse getStatus(UUID studentId) {
     Transcript transcript =
-        transcriptRepository
-            .findTopByStudentIdOrderByAcademicYearDesc(studentId)
+        transcriptRepository.findByStudentIdOrderByGeneratedAtDesc(studentId).stream()
+            .findFirst()
             .orElseThrow(
                 () ->
                     new ResponseStatusException(
@@ -69,36 +75,44 @@ public class TranscriptService {
     return toResponse(transcript);
   }
 
-  public File downloadPdf(Long studentId) {
+  public File downloadPdf(UUID studentId) {
     Transcript transcript =
-        transcriptRepository
-            .findTopByStudentIdOrderByAcademicYearDesc(studentId)
+        transcriptRepository.findByStudentIdOrderByGeneratedAtDesc(studentId).stream()
+            .findFirst()
             .orElseThrow(
                 () ->
                     new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Aucun releve pour cet etudiant"));
 
-    if (transcript.getPdfS3Key() == null) {
-      throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Releve incomplet, PDF indisponible");
-    }
+    Document document =
+        documentRepository.findByTranscriptId(transcript.getId()).stream()
+            .findFirst()
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "PDF indisponible"));
 
-    return bucketComponent.download(transcript.getPdfS3Key());
+    return bucketComponent.download(document.getS3Key());
   }
 
-  public String presignDownloadUrl(Long studentId) {
+  public String presignDownloadUrl(UUID studentId) {
     Transcript transcript =
-        transcriptRepository
-            .findTopByStudentIdOrderByAcademicYearDesc(studentId)
+        transcriptRepository.findByStudentIdOrderByGeneratedAtDesc(studentId).stream()
+            .findFirst()
             .orElseThrow(
                 () ->
                     new ResponseStatusException(
                         HttpStatus.NOT_FOUND, "Aucun releve pour cet etudiant"));
 
-    return bucketComponent.presign(transcript.getPdfS3Key(), Duration.ofMinutes(15)).toString();
+    Document document =
+        documentRepository.findByTranscriptId(transcript.getId()).stream()
+            .findFirst()
+            .orElseThrow(
+                () -> new ResponseStatusException(HttpStatus.NOT_FOUND, "PDF indisponible"));
+
+    return bucketComponent.presign(document.getS3Key(), Duration.ofMinutes(15)).toString();
   }
 
   private TranscriptStatusResponse toResponse(Transcript transcript) {
     return new TranscriptStatusResponse(
-        transcript.getStudentId(), transcript.getStatus().name(), transcript.getGeneratedAt());
+        transcript.getId().toString(), transcript.getStatus(), transcript.getGeneratedAt());
   }
 }

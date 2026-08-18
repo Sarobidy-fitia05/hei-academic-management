@@ -3,7 +3,7 @@ package com.example.demo.endpoint.rest.dto;
 import java.util.List;
 
 public record AnnualResultDTO(
-    Long studentId,
+    String studentId,
     String studentFirstName,
     String studentLastName,
     int academicYear,
