@@ -1,4 +1,5 @@
 openapi: 3.0.3
+
 info:
   title: HEI Academic Management API
   description: API de gestion académique et diplomation (HEI)
@@ -17,6 +18,7 @@ tags:
     description: Liste et export des diplômés
 
 paths:
+
   /auth/register:
     post:
       tags: [Auth]
@@ -66,7 +68,6 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
-
 
   /api/student/transcripts/generate:
     post:
@@ -175,37 +176,79 @@ paths:
         '403':
           description: Accès refusé (réservé ADMIN)
 
+  /api/admin/graduates/generate:
+    post:
+      tags: [Graduates]
+      summary: Calculer le classement et generer le XLSX des diplomes
+      operationId: generateGraduates
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: promotionId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: parcours
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/Parcours'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/GraduateDTO'
+      responses:
+        '200':
+          description: Liste classee des diplomes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GraduateDTO'
+        '403':
+          description: Acces refuse (reserve ADMIN)
+
   /api/admin/graduates/export:
     get:
       tags: [Graduates]
-      summary: Télécharger la liste des diplômés au format XLSX
+      summary: Telecharger la liste des diplomes au format XLSX
       operationId: exportGraduatesXlsx
       security:
         - bearerAuth: []
       parameters:
         - name: promotionId
           in: query
-          required: false
+          required: true
           schema:
             type: integer
             format: int64
         - name: parcours
           in: query
-          required: false
+          required: true
           schema:
             $ref: '#/components/schemas/Parcours'
       responses:
         '200':
-          description: Fichier XLSX des diplômés
+          description: Fichier XLSX des diplomes
           content:
             application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
               schema:
                 type: string
                 format: binary
         '403':
-          description: Accès refusé (réservé ADMIN)
+          description: Acces refuse (reserve ADMIN)
+        '404':
+          description: Aucun export trouve
 
 components:
+
   securitySchemes:
     bearerAuth:
       type: http
@@ -213,17 +256,28 @@ components:
       bearerFormat: JWT
 
   schemas:
+
     Role:
       type: string
-      enum: [STUDENT, TEACHER, ADMIN]
+      enum:
+        - STUDENT
+        - TEACHER
+        - ADMIN
 
     Parcours:
       type: string
-      enum: [EL, TN]
+      enum:
+        - EL
+        - TN
 
     RegisterRequest:
       type: object
-      required: [firstName, lastName, email, password, role]
+      required:
+        - firstName
+        - lastName
+        - email
+        - password
+        - role
       properties:
         firstName:
           type: string
@@ -240,7 +294,9 @@ components:
 
     LoginRequest:
       type: object
-      required: [email, password]
+      required:
+        - email
+        - password
       properties:
         email:
           type: string
@@ -269,7 +325,9 @@ components:
 
     AnnualResultDTO:
       type: object
-      required: [studentId, academicYear]
+      required:
+        - studentId
+        - academicYear
       properties:
         studentId:
           type: integer
@@ -298,7 +356,9 @@ components:
           format: int64
         status:
           type: string
-          enum: [COMPLETE, INCOMPLETE]
+          enum:
+            - COMPLETE
+            - INCOMPLETE
         generatedAt:
           type: string
           format: date-time

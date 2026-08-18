@@ -10,7 +10,7 @@ plugins {
 
     id 'jacoco'
 
-
+    
 }
 
 jacoco {
@@ -40,10 +40,7 @@ configurations {
 
 
 test {
-    maxParallelForks = 1
-    minHeapSize = "128m"
-    maxHeapSize = "256m"
-    jvmArgs '-XX:+UseSerialGC', '-XX:MaxMetaspaceSize=128m'
+    maxParallelForks = Runtime.runtime.availableProcessors().intdiv(2) ?: 1
     useJUnitPlatform()
     finalizedBy jacocoTestCoverageVerification
 }
@@ -74,7 +71,8 @@ jacocoTestReport {
         html.required = true
     }
     afterEvaluate {
-
+        // Need to be duplicated like this from jacocoTestCoverageVerification,
+        // else display coverageRate is inconsistent with what was computed during coverage...
         classDirectories.setFrom(files(classDirectories.files.collect {
             fileTree(dir: it, exclude: [
                     "**/gen/**"
@@ -155,11 +153,6 @@ dependencies {
     testImplementation 'org.testcontainers:testcontainers-junit-jupiter:2.0.2'
     testImplementation 'org.junit-pioneer:junit-pioneer:2.2.0'
 
-    implementation 'org.springframework.boot:spring-boot-starter-data-jpa:3.2.2'
-    runtimeOnly 'org.postgresql:postgresql:42.7.2'
-    implementation 'org.springframework.boot:spring-boot-starter-validation:3.2.2'
-
-    runtimeOnly 'org.postgresql:postgresql'
     implementation 'org.springframework.boot:spring-boot-starter-security:3.2.2'
     implementation 'org.springframework.boot:spring-boot-starter-validation:3.2.2'
 
@@ -167,8 +160,6 @@ dependencies {
     runtimeOnly 'io.jsonwebtoken:jjwt-impl:0.11.5'
     runtimeOnly 'io.jsonwebtoken:jjwt-jackson:0.11.5'
 
-    testImplementation 'org.springframework.boot:spring-boot-starter-test'
-    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     implementation 'me.paulschwarz:spring-dotenv:4.0.0'
 
     testImplementation 'org.springframework.security:spring-security-test:6.2.1'
@@ -183,5 +174,12 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
 
+    implementation 'org.apache.pdfbox:pdfbox:2.0.31'
+
+    implementation 'org.apache.poi:poi-ooxml:5.2.5'
+    implementation 'org.springframework.boot:spring-boot-starter-thymeleaf:3.2.2'
+
+    implementation 'software.amazon.awssdk:s3:2.21.40'
+    implementation 'software.amazon.awssdk:s3-transfer-manager:2.21.40'
 
 }
