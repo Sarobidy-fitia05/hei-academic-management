@@ -3,7 +3,6 @@ package com.example.demo.service.event;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import com.example.demo.endpoint.event.model.SendTranscriptEmailRequested;
-
 import com.example.demo.file.bucket.BucketComponent;
 import com.example.demo.mail.Mailer;
 import com.example.demo.repository.DocumentRepository;
@@ -41,7 +40,7 @@ class SendTranscriptEmailRequestedServiceIntegrationTest {
     var event = new SendTranscriptEmailRequested(UUID.randomUUID(), "personne@example.com");
 
     assertThatThrownBy(() -> service.accept(event))
-            .isInstanceOf(ResponseStatusException.class)
-            .hasMessageContaining("404");
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("404");
   }
 }

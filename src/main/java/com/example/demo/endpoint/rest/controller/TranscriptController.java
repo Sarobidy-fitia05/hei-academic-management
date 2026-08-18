@@ -27,15 +27,15 @@ public class TranscriptController {
   private final EventProducer<SendTranscriptEmailRequested> eventProducer;
 
   public TranscriptController(
-          TranscriptService transcriptService,
-          EventProducer<SendTranscriptEmailRequested> eventProducer) {
+      TranscriptService transcriptService,
+      EventProducer<SendTranscriptEmailRequested> eventProducer) {
     this.transcriptService = transcriptService;
     this.eventProducer = eventProducer;
   }
 
   @PostMapping("/generate")
   public ResponseEntity<TranscriptStatusResponse> generate(@RequestBody AnnualResultDTO resultData)
-          throws IOException {
+      throws IOException {
     return ResponseEntity.ok(transcriptService.generate(resultData));
   }
 
@@ -52,7 +52,7 @@ public class TranscriptController {
 
   @PostMapping("/{studentId}/send")
   public ResponseEntity<Void> sendByEmail(
-          @PathVariable UUID studentId, @RequestParam String email) {
+      @PathVariable UUID studentId, @RequestParam String email) {
     var event = new SendTranscriptEmailRequested(studentId, email);
     eventProducer.accept(List.of(event));
     return ResponseEntity.accepted().build();

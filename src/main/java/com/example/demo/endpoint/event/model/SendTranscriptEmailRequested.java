@@ -9,8 +9,7 @@ public class SendTranscriptEmailRequested extends PojaEvent {
   private UUID studentId;
   private String recipientEmail;
 
-  public SendTranscriptEmailRequested() {
-  }
+  public SendTranscriptEmailRequested() {}
 
   public SendTranscriptEmailRequested(UUID studentId, String recipientEmail) {
     this.studentId = studentId;
@@ -52,7 +51,7 @@ public class SendTranscriptEmailRequested extends PojaEvent {
       return false;
     }
     return Objects.equals(studentId, that.studentId)
-            && Objects.equals(recipientEmail, that.recipientEmail);
+        && Objects.equals(recipientEmail, that.recipientEmail);
   }
 
   @Override
