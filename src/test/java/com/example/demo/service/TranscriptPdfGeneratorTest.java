@@ -15,7 +15,7 @@ class TranscriptPdfGeneratorTest {
   void generate_produitUnPdfNonVide() throws Exception {
     AnnualResultDTO data =
         new AnnualResultDTO(
-            1L,
+            "e2000000-0000-4000-8000-000000000001",
             "Tsiory",
             "Rakoto",
             2026,
@@ -33,7 +33,9 @@ class TranscriptPdfGeneratorTest {
 
   @Test
   void generate_gereUneListeDeNotesVide() throws Exception {
-    AnnualResultDTO data = new AnnualResultDTO(2L, "Jean", "Rasoa", 2026, List.of(), 0.0, 0);
+    AnnualResultDTO data =
+        new AnnualResultDTO(
+            "e2000000-0000-4000-8000-000000000002", "Jean", "Rasoa", 2026, List.of(), 0.0, 0);
 
     byte[] pdf = generator.generate(data);
 

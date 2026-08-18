@@ -4,9 +4,8 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-import com.example.demo.user.UserRepository;
+import com.example.demo.repository.UserAccountRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import jakarta.transaction.Transactional;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -18,27 +17,25 @@ import org.springframework.test.web.servlet.MockMvc;
 
 @SpringBootTest
 @AutoConfigureMockMvc
-@Transactional
 @ActiveProfiles("test")
 class AuthControllerIntegrationTest {
 
   @Autowired private MockMvc mockMvc;
-
-  @Autowired private UserRepository userRepository;
-
+  @Autowired private UserAccountRepository userAccountRepository;
   @Autowired private ObjectMapper objectMapper;
 
   @BeforeEach
   void cleanUp() {
-    userRepository.deleteAll();
+    userAccountRepository.findByUsername("tsiory").ifPresent(userAccountRepository::delete);
+    userAccountRepository.findByUsername("duplicate").ifPresent(userAccountRepository::delete);
+    userAccountRepository.findByUsername("loginuser").ifPresent(userAccountRepository::delete);
+    userAccountRepository.findByUsername("wrongpassuser").ifPresent(userAccountRepository::delete);
   }
 
   @Test
-  void register_creesUnUtilisateurEtRetourneUnToken() throws Exception {
+  void register_creesUnCompteEtRetourneUnToken() throws Exception {
     String payload =
-        objectMapper.writeValueAsString(
-            new RegisterPayload(
-                "Tsiory", "Rakoto", "tsiory@example.com", "password123", "STUDENT"));
+        objectMapper.writeValueAsString(new RegisterPayload("tsiory", "password123", "STUDENT"));
 
     mockMvc
         .perform(post("/auth/register").contentType(MediaType.APPLICATION_JSON).content(payload))
@@ -47,11 +44,9 @@ class AuthControllerIntegrationTest {
   }
 
   @Test
-  void register_refuseUnEmailDejaUtilise() throws Exception {
+  void register_refuseUnUsernameDejaUtilise() throws Exception {
     String payload =
-        objectMapper.writeValueAsString(
-            new RegisterPayload(
-                "Tsiory", "Rakoto", "duplicate@example.com", "password123", "STUDENT"));
+        objectMapper.writeValueAsString(new RegisterPayload("duplicate", "password123", "STUDENT"));
 
     mockMvc
         .perform(post("/auth/register").contentType(MediaType.APPLICATION_JSON).content(payload))
@@ -65,15 +60,14 @@ class AuthControllerIntegrationTest {
   @Test
   void login_retourneUnTokenAvecDesIdentifiantsValides() throws Exception {
     String registerPayload =
-        objectMapper.writeValueAsString(
-            new RegisterPayload("Tsiory", "Rakoto", "login@example.com", "password123", "STUDENT"));
+        objectMapper.writeValueAsString(new RegisterPayload("loginuser", "password123", "STUDENT"));
     mockMvc
         .perform(
             post("/auth/register").contentType(MediaType.APPLICATION_JSON).content(registerPayload))
         .andExpect(status().isOk());
 
     String loginPayload =
-        objectMapper.writeValueAsString(new LoginPayload("login@example.com", "password123"));
+        objectMapper.writeValueAsString(new LoginPayload("loginuser", "password123"));
 
     mockMvc
         .perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON).content(loginPayload))
@@ -85,24 +79,21 @@ class AuthControllerIntegrationTest {
   void login_refuseUnMauvaisMotDePasse() throws Exception {
     String registerPayload =
         objectMapper.writeValueAsString(
-            new RegisterPayload(
-                "Tsiory", "Rakoto", "wrongpass@example.com", "password123", "STUDENT"));
+            new RegisterPayload("wrongpassuser", "password123", "STUDENT"));
     mockMvc
         .perform(
             post("/auth/register").contentType(MediaType.APPLICATION_JSON).content(registerPayload))
         .andExpect(status().isOk());
 
     String loginPayload =
-        objectMapper.writeValueAsString(
-            new LoginPayload("wrongpass@example.com", "mauvaisMotDePasse"));
+        objectMapper.writeValueAsString(new LoginPayload("wrongpassuser", "mauvaisMotDePasse"));
 
     mockMvc
         .perform(post("/auth/login").contentType(MediaType.APPLICATION_JSON).content(loginPayload))
         .andExpect(status().isUnauthorized());
   }
 
-  private record RegisterPayload(
-      String firstName, String lastName, String email, String password, String role) {}
+  private record RegisterPayload(String username, String password, String role) {}
 
-  private record LoginPayload(String email, String password) {}
+  private record LoginPayload(String username, String password) {}
 }
