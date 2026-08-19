@@ -35,8 +35,13 @@ jobs:
 
     env:
       AWS_REGION: eu-west-3
-
-
+      DATABASE_URL: jdbc:postgresql://localhost:5432/testdb
+      DATABASE_USERNAME: test
+      DATABASE_PASSWORD: test
+      JWT_SECRET: test-secret-key-for-ci-only-not-a-real-secret-1234567890
+      JWT_EXPIRATION_MS: 86400000
+      S3_BUCKET_NAME: test-bucket
+      EVENTBRIDGE_BUS_NAME: test-bus
     steps:
       - uses: actions/checkout@v4.1.6
 
