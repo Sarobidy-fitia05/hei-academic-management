@@ -14,7 +14,6 @@ import com.example.demo.repository.DocumentRepository;
 import com.example.demo.repository.GraduationListRepository;
 import com.example.demo.repository.ProgramRepository;
 import com.example.demo.repository.PromotionRepository;
-import com.example.demo.repository.GraduationRepository;
 import java.io.File;
 import java.util.List;
 import java.util.UUID;
@@ -65,11 +64,13 @@ class GraduationServiceIntegrationTest {
 
   @Test
   void generate_classeParMoyenneDecroissanteEtUploadeLeXlsx() throws Exception {
-    List<GraduateDTO> raw = List.of(
+    List<GraduateDTO> raw =
+        List.of(
             new GraduateDTO(UUID.randomUUID(), "Tsiory", "Rakoto", "TN", 12.0, null),
             new GraduateDTO(UUID.randomUUID(), "Jean", "Rasoa", "TN", 16.5, null));
 
-    List<GraduateDTO> ranked = graduationService.generate(testPromotionYear, ProgramCode.TN, 2026, raw);
+    List<GraduateDTO> ranked =
+        graduationService.generate(testPromotionYear, ProgramCode.TN, 2026, raw);
 
     assertThat(ranked.get(0).ranking()).isEqualTo(1);
     assertThat(ranked.get(0).generalAverage()).isEqualTo(16.5);

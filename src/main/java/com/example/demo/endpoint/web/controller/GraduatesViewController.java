@@ -30,16 +30,18 @@ public class GraduatesViewController {
 
   @GetMapping("/graduates/export")
   @ResponseBody
-  public ResponseEntity<byte[]> downloadXlsx(@RequestParam UUID graduationListId) throws IOException {
+  public ResponseEntity<byte[]> downloadXlsx(@RequestParam UUID graduationListId)
+      throws IOException {
     byte[] xlsx = Files.readAllBytes(graduationService.downloadXlsx(graduationListId).toPath());
 
     ContentDisposition contentDisposition =
-            ContentDisposition.attachment().filename("diplomes.xlsx").build();
+        ContentDisposition.attachment().filename("diplomes.xlsx").build();
 
     return ResponseEntity.ok()
-            .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString())
-            .contentType(MediaType.parseMediaType(
-                    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-            .body(xlsx);
+        .header(HttpHeaders.CONTENT_DISPOSITION, contentDisposition.toString())
+        .contentType(
+            MediaType.parseMediaType(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+        .body(xlsx);
   }
 }

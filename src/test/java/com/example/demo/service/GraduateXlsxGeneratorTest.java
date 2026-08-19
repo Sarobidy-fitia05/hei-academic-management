@@ -16,7 +16,8 @@ class GraduateXlsxGeneratorTest {
 
   @Test
   void generate_produitUnClasseurAvecEnteteEtLignes() throws Exception {
-    List<GraduateDTO> graduates = List.of(
+    List<GraduateDTO> graduates =
+        List.of(
             new GraduateDTO(UUID.randomUUID(), "Tsiory", "Rakoto", "TN", 15.8, 1),
             new GraduateDTO(UUID.randomUUID(), "Jean", "Rasoa", "EL", 14.2, 2));
 

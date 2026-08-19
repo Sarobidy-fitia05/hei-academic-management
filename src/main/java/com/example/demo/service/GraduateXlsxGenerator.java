@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 public class GraduateXlsxGenerator {
 
   private static final String[] HEADERS = {
-          "Rang", "Matricule", "Prenom", "Nom", "Parcours", "Moyenne generale"
+    "Rang", "Matricule", "Prenom", "Nom", "Parcours", "Moyenne generale"
   };
 
   public byte[] generate(List<GraduateDTO> graduates) throws IOException {

@@ -20,28 +20,33 @@ import org.springframework.web.bind.annotation.RestController;
 @RequestMapping("/api/admin/graduates")
 public class GraduationController {
 
-    private final GraduationService graduationService;
+  private final GraduationService graduationService;
 
-    public GraduationController(GraduationService graduationService) {
-        this.graduationService = graduationService;
-    }
+  public GraduationController(GraduationService graduationService) {
+    this.graduationService = graduationService;
+  }
 
-    @PostMapping("/generate")
-    public ResponseEntity<List<GraduateDTO>> generate(
-            @RequestParam Integer promotionYear,
-            @RequestParam ProgramCode programCode,
-            @RequestParam Integer graduationYear,
-            @RequestBody List<GraduateDTO> rawGraduates) throws IOException {
-        return ResponseEntity.ok(
-                graduationService.generate(promotionYear, programCode, graduationYear, rawGraduates));
-    }
+  @PostMapping("/generate")
+  public ResponseEntity<List<GraduateDTO>> generate(
+      @RequestParam Integer promotionYear,
+      @RequestParam ProgramCode programCode,
+      @RequestParam Integer graduationYear,
+      @RequestBody List<GraduateDTO> rawGraduates)
+      throws IOException {
+    return ResponseEntity.ok(
+        graduationService.generate(promotionYear, programCode, graduationYear, rawGraduates));
+  }
 
-    @GetMapping(value = "/export", produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
-    public ResponseEntity<byte[]> downloadXlsx(@RequestParam UUID graduationListId) throws IOException {
-        byte[] xlsx = Files.readAllBytes(graduationService.downloadXlsx(graduationListId).toPath());
-        return ResponseEntity.ok()
-                .contentType(MediaType.parseMediaType(
-                        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
-                .body(xlsx);
-    }
+  @GetMapping(
+      value = "/export",
+      produces = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+  public ResponseEntity<byte[]> downloadXlsx(@RequestParam UUID graduationListId)
+      throws IOException {
+    byte[] xlsx = Files.readAllBytes(graduationService.downloadXlsx(graduationListId).toPath());
+    return ResponseEntity.ok()
+        .contentType(
+            MediaType.parseMediaType(
+                "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"))
+        .body(xlsx);
+  }
 }
