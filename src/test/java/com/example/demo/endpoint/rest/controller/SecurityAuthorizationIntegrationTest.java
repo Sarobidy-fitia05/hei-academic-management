@@ -8,6 +8,7 @@ import com.example.demo.entity.Role;
 import com.example.demo.entity.UserAccount;
 import com.example.demo.jwt.JwtService;
 import com.example.demo.repository.UserAccountRepository;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -16,10 +17,12 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.transaction.annotation.Transactional;
 
 @SpringBootTest
 @AutoConfigureMockMvc
 @ActiveProfiles("test")
+@Transactional
 class SecurityAuthorizationIntegrationTest {
 
   @Autowired private MockMvc mockMvc;
@@ -33,12 +36,10 @@ class SecurityAuthorizationIntegrationTest {
 
   @BeforeEach
   void setUp() {
-    userAccountRepository.findByUsername("student_test").ifPresent(userAccountRepository::delete);
-    userAccountRepository.findByUsername("teacher_test").ifPresent(userAccountRepository::delete);
-    userAccountRepository.findByUsername("admin_test").ifPresent(userAccountRepository::delete);
-    studentToken = createUserAndGetToken("student_test", Role.STUDENT);
-    teacherToken = createUserAndGetToken("teacher_test", Role.TEACHER);
-    adminToken = createUserAndGetToken("admin_test", Role.ADMIN);
+    String suffix = UUID.randomUUID().toString().substring(0, 8);
+    studentToken = createUserAndGetToken("student_test_" + suffix, Role.STUDENT);
+    teacherToken = createUserAndGetToken("teacher_test_" + suffix, Role.TEACHER);
+    adminToken = createUserAndGetToken("admin_test_" + suffix, Role.ADMIN);
   }
 
   private String createUserAndGetToken(String username, Role role) {
