@@ -76,4 +76,49 @@ class GraduationServiceIntegrationTest {
     assertThat(ranked.get(0).generalAverage()).isEqualTo(16.5);
     verify(bucketComponent).upload(any(File.class), anyString());
   }
+
+  @Test
+  void generate_leve404SiPromotionIntrouvable() {
+    List<GraduateDTO> raw = List.of();
+
+    org.assertj.core.api.Assertions.assertThatThrownBy(
+            () -> graduationService.generate(1900, ProgramCode.TN, 2026, raw))
+        .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+        .hasMessageContaining("404");
+  }
+
+  @Test
+  void generate_leve404SiProgrammeIntrouvable() {
+    List<GraduateDTO> raw = List.of();
+
+    org.assertj.core.api.Assertions.assertThatThrownBy(
+            () -> graduationService.generate(testPromotionYear, ProgramCode.EL, 2026, raw))
+        .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+        .hasMessageContaining("404");
+  }
+
+  @Test
+  void downloadXlsx_retourneLeFichierSiDocumentExiste() throws Exception {
+    List<GraduateDTO> raw =
+        List.of(new GraduateDTO(UUID.randomUUID(), "Tsiory", "Rakoto", "TN", 14.0, null));
+
+    graduationService.generate(testPromotionYear, ProgramCode.TN, 2026, raw);
+
+    var graduationList = graduationListRepository.findAll().get(0);
+    File fakeFile = File.createTempFile("graduates-dl-test-", ".xlsx");
+    org.mockito.Mockito.when(bucketComponent.download(org.mockito.ArgumentMatchers.anyString()))
+        .thenReturn(fakeFile);
+
+    File result = graduationService.downloadXlsx(graduationList.getId());
+
+    assertThat(result).isEqualTo(fakeFile);
+  }
+
+  @Test
+  void downloadXlsx_leve404SiAucunDocument() {
+    org.assertj.core.api.Assertions.assertThatThrownBy(
+            () -> graduationService.downloadXlsx(UUID.randomUUID()))
+        .isInstanceOf(org.springframework.web.server.ResponseStatusException.class)
+        .hasMessageContaining("404");
+  }
 }
