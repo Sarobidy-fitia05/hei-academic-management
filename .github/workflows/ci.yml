@@ -18,9 +18,24 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
+    services:
+      postgres:
+        image: postgres:13.9
+        env:
+          POSTGRES_DB: testdb
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
     env:
       AWS_REGION: eu-west-3
-      
+
 
     steps:
       - uses: actions/checkout@v4.1.6
@@ -34,7 +49,7 @@ jobs:
       - run: |
           ./gradlew test
 
-      
+
 
   format:
     runs-on: ubuntu-latest
