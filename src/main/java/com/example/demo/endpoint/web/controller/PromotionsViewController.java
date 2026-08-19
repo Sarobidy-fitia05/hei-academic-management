@@ -1,6 +1,6 @@
 package com.example.demo.endpoint.web.controller;
 
-import com.example.demo.promotion.PromotionPlaceholderService;
+import com.example.demo.repository.PromotionRepository;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -8,15 +8,15 @@ import org.springframework.web.bind.annotation.GetMapping;
 @Controller
 public class PromotionsViewController {
 
-  private final PromotionPlaceholderService promotionService;
+  private final PromotionRepository promotionRepository;
 
-  public PromotionsViewController(PromotionPlaceholderService promotionService) {
-    this.promotionService = promotionService;
+  public PromotionsViewController(PromotionRepository promotionRepository) {
+    this.promotionRepository = promotionRepository;
   }
 
   @GetMapping("/promotions")
   public String listPromotions(Model model) {
-    model.addAttribute("promotions", promotionService.listAll());
+    model.addAttribute("promotions", promotionRepository.findAll());
     return "promotions";
   }
 }

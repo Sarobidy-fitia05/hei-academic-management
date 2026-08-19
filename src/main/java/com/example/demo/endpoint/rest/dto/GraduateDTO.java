@@ -1,11 +1,12 @@
 package com.example.demo.endpoint.rest.dto;
 
-import com.example.demo.graduation.Parcours;
+import java.util.UUID;
 
 public record GraduateDTO(
-    Long studentId,
-    String firstName,
-    String lastName,
-    Parcours parcours,
-    double generalAverage,
-    Integer ranking) {}
+        UUID studentId,
+        String firstName,
+        String lastName,
+        String programCode,
+        double generalAverage,
+        Integer ranking) {
+}

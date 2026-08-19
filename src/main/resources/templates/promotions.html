@@ -11,13 +11,13 @@
     <thead>
     <tr>
         <th>Annee</th>
-        <th>Nom</th>
+        <th>Prefixe</th>
     </tr>
     </thead>
     <tbody>
     <tr th:each="promotion : ${promotions}">
         <td th:text="${promotion.year}"></td>
-        <td th:text="${promotion.name}"></td>
+        <td th:text="${promotion.groupPrefix}"></td>
     </tr>
     </tbody>
 </table>

@@ -15,7 +15,7 @@ import org.springframework.stereotype.Service;
 public class GraduateXlsxGenerator {
 
   private static final String[] HEADERS = {
-    "Rang", "Matricule", "Prenom", "Nom", "Parcours", "Moyenne generale"
+          "Rang", "Matricule", "Prenom", "Nom", "Parcours", "Moyenne generale"
   };
 
   public byte[] generate(List<GraduateDTO> graduates) throws IOException {
@@ -32,10 +32,10 @@ public class GraduateXlsxGenerator {
       for (GraduateDTO graduate : graduates) {
         Row row = sheet.createRow(rowIndex++);
         row.createCell(0, CellType.NUMERIC).setCellValue(graduate.ranking());
-        row.createCell(1, CellType.NUMERIC).setCellValue(graduate.studentId());
+        row.createCell(1, CellType.STRING).setCellValue(graduate.studentId().toString());
         row.createCell(2, CellType.STRING).setCellValue(graduate.firstName());
         row.createCell(3, CellType.STRING).setCellValue(graduate.lastName());
-        row.createCell(4, CellType.STRING).setCellValue(graduate.parcours().name());
+        row.createCell(4, CellType.STRING).setCellValue(graduate.programCode());
         row.createCell(5, CellType.NUMERIC).setCellValue(graduate.generalAverage());
       }
 
