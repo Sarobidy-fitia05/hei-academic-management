@@ -3,9 +3,9 @@ package com.example.demo.service;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import com.example.demo.endpoint.rest.dto.GraduateDTO;
-import com.example.demo.graduation.Parcours;
 import java.io.ByteArrayInputStream;
 import java.util.List;
+import java.util.UUID;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.junit.jupiter.api.Test;
@@ -16,10 +16,9 @@ class GraduateXlsxGeneratorTest {
 
   @Test
   void generate_produitUnClasseurAvecEnteteEtLignes() throws Exception {
-    List<GraduateDTO> graduates =
-        List.of(
-            new GraduateDTO(1L, "Tsiory", "Rakoto", Parcours.TN, 15.8, 1),
-            new GraduateDTO(2L, "Jean", "Rasoa", Parcours.EL, 14.2, 2));
+    List<GraduateDTO> graduates = List.of(
+            new GraduateDTO(UUID.randomUUID(), "Tsiory", "Rakoto", "TN", 15.8, 1),
+            new GraduateDTO(UUID.randomUUID(), "Jean", "Rasoa", "EL", 14.2, 2));
 
     byte[] xlsx = generator.generate(graduates);
 
