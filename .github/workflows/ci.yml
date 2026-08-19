@@ -29,9 +29,9 @@ jobs:
           - 5432:5432
         options: >-
           --health-cmd pg_isready
-          --health-interval 10s
+          --health-interval 5s
           --health-timeout 5s
-          --health-retries 5
+          --health-retries 10
 
     env:
       AWS_REGION: eu-west-3
@@ -42,6 +42,7 @@ jobs:
       JWT_EXPIRATION_MS: 86400000
       S3_BUCKET_NAME: test-bucket
       EVENTBRIDGE_BUS_NAME: test-bus
+
     steps:
       - uses: actions/checkout@v4.1.6
 
@@ -49,6 +50,18 @@ jobs:
         with:
           java-version: '21'
           distribution: 'corretto'
+
+      - name: Wait for Postgres to be ready
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5432 -U test; then
+              echo "Postgres is ready"
+              break
+            fi
+            echo "Waiting for postgres..."
+            sleep 2
+          done
+
       - run: chmod +x gradlew
       - run: chmod +x .shell/publish_gen_to_maven_local.sh
       - run: |
