@@ -1,6 +1,7 @@
 package com.example.demo.service;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThatThrownBy;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.verify;
@@ -12,23 +13,22 @@ import com.example.demo.repository.DocumentRepository;
 import com.example.demo.repository.TranscriptRepository;
 import java.io.File;
 import java.util.List;
+import java.util.UUID;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.web.server.ResponseStatusException;
 
 @SpringBootTest
 @ActiveProfiles("test")
 class TranscriptServiceIntegrationTest {
 
   @Autowired private TranscriptService transcriptService;
-
   @Autowired private TranscriptRepository transcriptRepository;
-
   @Autowired private DocumentRepository documentRepository;
-
   @MockBean private BucketComponent bucketComponent;
 
   @BeforeEach
@@ -48,10 +48,29 @@ class TranscriptServiceIntegrationTest {
             List.of(new GradeDTO("INFO101", "Algorithmique", 5, 15.5)),
             15.5,
             5);
-
     var response = transcriptService.generate(data);
-
     assertThat(response.status()).isEqualTo("COMPLETE");
     verify(bucketComponent).upload(any(File.class), anyString());
+  }
+
+  @Test
+  void getStatus_renvoie404SiAucunReleve() {
+    assertThatThrownBy(() -> transcriptService.getStatus(UUID.randomUUID()))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("404");
+  }
+
+  @Test
+  void downloadPdf_renvoie404SiAucunReleve() {
+    assertThatThrownBy(() -> transcriptService.downloadPdf(UUID.randomUUID()))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("404");
+  }
+
+  @Test
+  void presignDownloadUrl_renvoie404SiAucunReleve() {
+    assertThatThrownBy(() -> transcriptService.presignDownloadUrl(UUID.randomUUID()))
+        .isInstanceOf(ResponseStatusException.class)
+        .hasMessageContaining("404");
   }
 }
