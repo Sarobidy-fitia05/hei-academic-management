@@ -18,24 +18,25 @@ import software.amazon.awssdk.services.eventbridge.model.PutEventsResultEntry;
 
 class EventProducerTest {
 
-    @Test
-    void accept_envoieUnBatchAuBusEtNeLevePasDException() {
-        ObjectMapper om = new ObjectMapper();
-        EventBridgeClient eventBridgeClient = mock(EventBridgeClient.class);
-        ListGrouper<SendTranscriptEmailRequested> listGrouper = new ListGrouper<>();
+  @Test
+  void accept_envoieUnBatchAuBusEtNeLevePasDException() {
+    ObjectMapper om = new ObjectMapper();
+    EventBridgeClient eventBridgeClient = mock(EventBridgeClient.class);
+    ListGrouper<SendTranscriptEmailRequested> listGrouper = new ListGrouper<>();
 
-        var event = new SendTranscriptEmailRequested(UUID.randomUUID(), "test@example.com");
+    var event = new SendTranscriptEmailRequested(UUID.randomUUID(), "test@example.com");
 
-        PutEventsResultEntry successEntry =
-                PutEventsResultEntry.builder().eventId("evt-1").build();
-        when(eventBridgeClient.putEvents(any(software.amazon.awssdk.services.eventbridge.model.PutEventsRequest.class)))
-                .thenReturn(PutEventsResponse.builder().entries(List.of(successEntry)).build());
+    PutEventsResultEntry successEntry = PutEventsResultEntry.builder().eventId("evt-1").build();
+    when(eventBridgeClient.putEvents(
+            any(software.amazon.awssdk.services.eventbridge.model.PutEventsRequest.class)))
+        .thenReturn(PutEventsResponse.builder().entries(List.of(successEntry)).build());
 
-        EventProducer<SendTranscriptEmailRequested> eventProducer =
-                new EventProducer<>(om, eventBridgeClient, "test-bus", listGrouper);
+    EventProducer<SendTranscriptEmailRequested> eventProducer =
+        new EventProducer<>(om, eventBridgeClient, "test-bus", listGrouper);
 
-        eventProducer.accept(List.of(event));
+    eventProducer.accept(List.of(event));
 
-        verify(eventBridgeClient).putEvents(any(software.amazon.awssdk.services.eventbridge.model.PutEventsRequest.class));
-    }
+    verify(eventBridgeClient)
+        .putEvents(any(software.amazon.awssdk.services.eventbridge.model.PutEventsRequest.class));
+  }
 }
