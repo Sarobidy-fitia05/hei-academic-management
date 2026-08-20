@@ -4,28 +4,29 @@ import com.example.demo.endpoint.event.model.SendTranscriptEmailRequested;
 import com.example.demo.mail.Email;
 import com.example.demo.mail.Mailer;
 import com.example.demo.service.TranscriptService;
-import jakarta.mail.internet.AddressException;
 import jakarta.mail.internet.InternetAddress;
 import java.io.File;
 import java.util.List;
 import java.util.function.Consumer;
+import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import org.springframework.stereotype.Service;
 
 @Service
+@AllArgsConstructor
 public class SendTranscriptEmailRequestedService implements Consumer<SendTranscriptEmailRequested> {
 
   private final TranscriptService transcriptService;
   private final Mailer mailer;
 
-  public SendTranscriptEmailRequestedService(TranscriptService transcriptService, Mailer mailer) {
-    this.transcriptService = transcriptService;
-    this.mailer = mailer;
-  }
-
   @Override
+  @SneakyThrows
   public void accept(SendTranscriptEmailRequested event) {
+    File pdfFile = null;
     try {
-      File pdfFile = transcriptService.downloadPdf(event.getStudentId());
+      // getStudentId() est déjà un UUID, pas besoin de UUID.fromString()
+      pdfFile = transcriptService.downloadPdf(event.getStudentId());
+
       InternetAddress recipient = new InternetAddress(event.getRecipientEmail());
 
       Email email =
@@ -33,13 +34,15 @@ public class SendTranscriptEmailRequestedService implements Consumer<SendTranscr
               recipient,
               List.of(),
               List.of(),
-              "Votre releve de notes",
-              "<p>Bonjour,</p><p>Veuillez trouver ci-joint votre releve de notes.</p>",
+              "HEI - Votre relevé de notes",
+              "<p>Bonjour,</p><p>Veuillez trouver ci-joint votre relevé de notes officiel.</p>",
               List.of(pdfFile));
 
       mailer.accept(email);
-    } catch (AddressException e) {
-      throw new RuntimeException(e);
+    } finally {
+      if (pdfFile != null && pdfFile.exists()) {
+        pdfFile.delete();
+      }
     }
   }
 }
