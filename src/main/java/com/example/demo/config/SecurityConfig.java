@@ -60,12 +60,7 @@ public class SecurityConfig {
         .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
         .authorizeHttpRequests(
             auth ->
-                auth.requestMatchers(
-                        "/auth/**",
-                        "/hello",
-                        "/health/**",
-                        "/generate-and-send-pdf",
-                        "/api/student/transcripts/**")
+                auth.requestMatchers("/auth/**", "/hello", "/health/**", "/generate-and-send-pdf")
                     .permitAll()
                     .requestMatchers("/api/admin/**")
                     .hasRole("ADMIN")
