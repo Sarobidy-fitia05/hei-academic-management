@@ -37,7 +37,7 @@ public class SecurityConfig {
   @Bean
   @Order(1)
   public SecurityFilterChain webFilterChain(HttpSecurity http) throws Exception {
-    http.securityMatcher("/login", "/promotions/**", "/graduates/**", "/css/**", "/js/**")
+    http.securityMatcher("/login", "/promotions/**", "/css/**", "/js/**")
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(
             auth ->
@@ -68,6 +68,8 @@ public class SecurityConfig {
                     .hasAnyRole("TEACHER", "ADMIN")
                     .requestMatchers("/api/student/**")
                     .hasAnyRole("STUDENT", "TEACHER", "ADMIN")
+                    .requestMatchers("/graduates/**")
+                    .hasRole("ADMIN")
                     .anyRequest()
                     .authenticated())
         .authenticationProvider(authenticationProvider())
