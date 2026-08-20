@@ -1,4 +1,5 @@
 openapi: 3.0.3
+
 info:
   title: HEI Academic Management API
   description: API de gestion académique et diplomation (HEI)
@@ -17,6 +18,7 @@ tags:
     description: Liste et export des diplômés
 
 paths:
+
   /auth/register:
     post:
       tags: [Auth]
@@ -67,10 +69,33 @@ paths:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
 
+  /api/student/transcripts/generate:
+    post:
+      tags: [Transcripts]
+      summary: Générer et uploader le relevé PDF d'un étudiant
+      operationId: generateTranscript
+      security:
+        - bearerAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AnnualResultDTO'
+      responses:
+        '200':
+          description: Relevé généré
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TranscriptStatusResponse'
+        '403':
+          description: Accès refusé
+
   /api/student/transcripts/{studentId}:
     get:
       tags: [Transcripts]
-      summary: Récupérer le statut du relevé d'un étudiant
+      summary: Récupérer le statut du relevé le plus récent d'un étudiant
       operationId: getTranscriptStatus
       security:
         - bearerAuth: []
@@ -120,28 +145,6 @@ paths:
         '404':
           description: Relevé introuvable
 
-  /api/student/transcripts/{studentId}/send:
-    post:
-      tags: [Transcripts]
-      summary: Envoyer le relevé par email (asynchrone)
-      operationId: sendTranscriptByEmail
-      security:
-        - bearerAuth: []
-      parameters:
-        - name: studentId
-          in: path
-          required: true
-          schema:
-            type: integer
-            format: int64
-      responses:
-        '202':
-          description: Envoi accepté, traité de façon asynchrone
-        '403':
-          description: Accès refusé
-        '404':
-          description: Relevé introuvable
-
   /api/admin/graduates:
     get:
       tags: [Graduates]
@@ -173,37 +176,79 @@ paths:
         '403':
           description: Accès refusé (réservé ADMIN)
 
+  /api/admin/graduates/generate:
+    post:
+      tags: [Graduates]
+      summary: Calculer le classement et generer le XLSX des diplomes
+      operationId: generateGraduates
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: promotionId
+          in: query
+          required: true
+          schema:
+            type: integer
+            format: int64
+        - name: parcours
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/Parcours'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: array
+              items:
+                $ref: '#/components/schemas/GraduateDTO'
+      responses:
+        '200':
+          description: Liste classee des diplomes
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/GraduateDTO'
+        '403':
+          description: Acces refuse (reserve ADMIN)
+
   /api/admin/graduates/export:
     get:
       tags: [Graduates]
-      summary: Télécharger la liste des diplômés au format XLSX
+      summary: Telecharger la liste des diplomes au format XLSX
       operationId: exportGraduatesXlsx
       security:
         - bearerAuth: []
       parameters:
         - name: promotionId
           in: query
-          required: false
+          required: true
           schema:
             type: integer
             format: int64
         - name: parcours
           in: query
-          required: false
+          required: true
           schema:
             $ref: '#/components/schemas/Parcours'
       responses:
         '200':
-          description: Fichier XLSX des diplômés
+          description: Fichier XLSX des diplomes
           content:
             application/vnd.openxmlformats-officedocument.spreadsheetml.sheet:
               schema:
                 type: string
                 format: binary
         '403':
-          description: Accès refusé (réservé ADMIN)
+          description: Acces refuse (reserve ADMIN)
+        '404':
+          description: Aucun export trouve
 
 components:
+
   securitySchemes:
     bearerAuth:
       type: http
@@ -211,17 +256,28 @@ components:
       bearerFormat: JWT
 
   schemas:
+
     Role:
       type: string
-      enum: [STUDENT, TEACHER, ADMIN]
+      enum:
+        - STUDENT
+        - TEACHER
+        - ADMIN
 
     Parcours:
       type: string
-      enum: [EL, TN]
+      enum:
+        - EL
+        - TN
 
     RegisterRequest:
       type: object
-      required: [firstName, lastName, email, password, role]
+      required:
+        - firstName
+        - lastName
+        - email
+        - password
+        - role
       properties:
         firstName:
           type: string
@@ -238,7 +294,9 @@ components:
 
     LoginRequest:
       type: object
-      required: [email, password]
+      required:
+        - email
+        - password
       properties:
         email:
           type: string
@@ -252,6 +310,44 @@ components:
         token:
           type: string
 
+    GradeDTO:
+      type: object
+      properties:
+        courseReference:
+          type: string
+        courseTitle:
+          type: string
+        credits:
+          type: integer
+        grade:
+          type: number
+          format: double
+
+    AnnualResultDTO:
+      type: object
+      required:
+        - studentId
+        - academicYear
+      properties:
+        studentId:
+          type: integer
+          format: int64
+        studentFirstName:
+          type: string
+        studentLastName:
+          type: string
+        academicYear:
+          type: integer
+        grades:
+          type: array
+          items:
+            $ref: '#/components/schemas/GradeDTO'
+        annualAverage:
+          type: number
+          format: double
+        totalCredits:
+          type: integer
+
     TranscriptStatusResponse:
       type: object
       properties:
@@ -260,7 +356,9 @@ components:
           format: int64
         status:
           type: string
-          enum: [COMPLETE, INCOMPLETE]
+          enum:
+            - COMPLETE
+            - INCOMPLETE
         generatedAt:
           type: string
           format: date-time
