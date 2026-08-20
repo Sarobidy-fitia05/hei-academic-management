@@ -37,7 +37,7 @@ public class SecurityConfig {
   @Bean
   @Order(1)
   public SecurityFilterChain webFilterChain(HttpSecurity http) throws Exception {
-    http.securityMatcher("/login", "/promotions/**", "/css/**", "/js/**")
+    http.securityMatcher("/login", "/promotions/**", "/graduates/**", "/css/**", "/js/**")
         .csrf(csrf -> csrf.disable())
         .authorizeHttpRequests(
             auth ->
@@ -60,7 +60,7 @@ public class SecurityConfig {
         .exceptionHandling(ex -> ex.authenticationEntryPoint(authenticationEntryPoint))
         .authorizeHttpRequests(
             auth ->
-                auth.requestMatchers("/auth/**")
+                auth.requestMatchers("/auth/**", "/hello", "/health/**")
                     .permitAll()
                     .requestMatchers("/api/admin/**")
                     .hasRole("ADMIN")
