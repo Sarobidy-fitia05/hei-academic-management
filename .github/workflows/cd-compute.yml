@@ -26,12 +26,44 @@ jobs:
     permissions:
       contents: write
 
+    services:
+      postgres:
+        image: postgres:13.9
+        env:
+          POSTGRES_DB: testdb
+          POSTGRES_USER: test
+          POSTGRES_PASSWORD: test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
     env:
       AWS_REGION: eu-west-3
-      
+      DATABASE_URL: jdbc:postgresql://localhost:5432/testdb
+      DATABASE_USERNAME: test
+      DATABASE_PASSWORD: test
+      JWT_SECRET: test-secret-key-for-ci-only-not-a-real-secret-1234567890
+      JWT_EXPIRATION_MS: 86400000
+      S3_BUCKET_NAME: test-bucket
+      EVENTBRIDGE_BUS_NAME: test-bus
 
     steps:
       - uses: actions/checkout@v4.1.6
+
+      - name: Wait for Postgres to be ready
+        run: |
+          for i in {1..30}; do
+            if pg_isready -h localhost -p 5432 -U test; then
+              echo "Postgres is ready"
+              break
+            fi
+            echo "Waiting for postgres..."
+            sleep 2
+          done
 
       - name: Update github workflow state
         run: |
@@ -116,7 +148,7 @@ jobs:
           TAG_MESSAGE="null"
           if [[ "${{ github.event_name }}" == "workflow_dispatch" && -n "$input_conf_id" ]]; then
             TAG_NAME="poja-depl-${app_env_deployment_id}"
-            TAG_MESSAGE="poja: deployment ID: ${app_env_deployment_id}"            
+            TAG_MESSAGE="poja: deployment ID: ${app_env_deployment_id}"
           fi
           echo "TAG_NAME=$TAG_NAME" >> $GITHUB_ENV
           echo "TAG_MESSAGE=$TAG_MESSAGE" >> $GITHUB_ENV
@@ -147,7 +179,7 @@ jobs:
                 tag_message: ($tag_message | if . == "null" then null else . end)
               }')")
           echo $response
-      
+
       - name: Tag commit if deployment with custom conf succeeded
         if: ${{ github.event_name == 'workflow_dispatch' && (github.event.inputs.env_conf_id != '' ) && env.TAG_NAME != 'null' && env.TAG_MESSAGE != 'null' }}
         env:
@@ -159,7 +191,7 @@ jobs:
           git config user.email "bot@poja.io"
           git tag -a "$TAG_NAME" -m "$TAG_MESSAGE"
           git push origin "$TAG_NAME"
-          
+
       - name: Update github state if step fails
         if: failure()
         run: |
@@ -196,4 +228,4 @@ jobs:
                     status: $status,
                     environment_type: $environment_type
                 }')")
-          echo $response 
+          echo $response
