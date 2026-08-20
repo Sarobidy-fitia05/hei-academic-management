@@ -14,6 +14,35 @@
     <button type="submit">Telecharger la liste des diplomes</button>
 </form>
 
+<h2>Listes générées</h2>
+<table>
+    <thead>
+    <tr>
+        <th>ID</th>
+        <th>Promotion</th>
+        <th>Parcours</th>
+        <th>Année</th>
+        <th>Généré le</th>
+        <th>Télécharger</th>
+    </tr>
+    </thead>
+    <tbody>
+    <tr th:each="list : ${graduationLists}">
+        <td th:text="${list.id}"></td>
+        <td th:text="${list.promotion != null ? list.promotion.year : '-'}"></td>
+        <td th:text="${list.program != null ? list.program.label : '-'}"></td>
+        <td th:text="${list.graduationYear}"></td>
+        <td th:text="${list.generatedAt}"></td>
+        <td>
+            <a th:if="${presignMap[list.id] != null}"
+               th:href="${presignMap[list.id]}" target="_blank">Télécharger (S3)</a>
+            <a th:unless="${presignMap[list.id] != null}"
+               th:href="@{|/graduates/export?graduationListId=${list.id}|}">Télécharger (app)</a>
+        </td>
+    </tr>
+    </tbody>
+</table>
+
 <a th:href="@{/promotions}">Retour aux promotions</a>
 </body>
 </html>
